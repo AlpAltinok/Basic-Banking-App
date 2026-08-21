@@ -11,7 +11,7 @@ Built as a portfolio project around common enterprise banking/fintech patterns �
 - EF Core (Code-First) with migrations
 - SQLite by default; SQL Server ready via config
 - JWT authentication + BCrypt password hashing
-- Unit tests (xUnit, Moq, FluentAssertions)
+- Unit & integration tests (xUnit, Moq, FluentAssertions, WebApplicationFactory)
 - CI: GitHub Actions + Azure Pipelines YAML
 
 ## Architecture
@@ -24,7 +24,8 @@ BankaApp.sln
 │   ├── BankaApp.Domain         → Entities & enums (framework-free)
 │   └── BankaApp.Infrastructure → EF Core, repositories, JWT, BCrypt
 └── tests/
-    └── BankaApp.UnitTests
+    ├── BankaApp.UnitTests
+    └── BankaApp.IntegrationTests
 ```
 
 **Why layers?** In financial systems, HTTP, business rules, and data access are separated so rules stay testable and the domain stays independent of frameworks.
@@ -39,6 +40,7 @@ BankaApp.sln
 - [x] Wallet: balance, deposit, withdraw, transaction history
 - [x] Transfers with DB transactions + idempotency keys
 - [x] Unit tests (Auth, Wallet, Transfer)
+- [x] Integration tests (HTTP E2E: auth → deposit → transfer + idempotency)
 - [x] EF Core migrations + persistent SQLite (SQL Server option)
 - [x] CI pipelines (GitHub Actions + Azure Pipelines)
 - [x] Docker image & compose

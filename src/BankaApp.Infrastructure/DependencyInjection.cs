@@ -30,7 +30,8 @@ public static class DependencyInjection
                     break;
 
                 case "InMemory":
-                    options.UseInMemoryDatabase("BankaAppDb");
+                    options.UseInMemoryDatabase(
+                        configuration.GetValue<string>("Database:InMemoryName") ?? "BankaAppDb");
                     break;
 
                 default:
