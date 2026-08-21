@@ -1,5 +1,5 @@
+using BankaApp.Application.Common.Exceptions;
 using BankaApp.Application.Interfaces;
-using BankaApp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -14,8 +14,17 @@ public class UnitOfWork : IUnitOfWork
         _db = db;
     }
 
-    public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        => _db.SaveChangesAsync(cancellationToken);
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            return await _db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new ConcurrencyException();
+        }
+    }
 
     public Task ExecuteInTransactionAsync(
         Func<CancellationToken, Task> operation,
@@ -30,11 +39,11 @@ public class UnitOfWork : IUnitOfWork
         Func<CancellationToken, Task<T>> operation,
         CancellationToken cancellationToken = default)
     {
-        // InMemory provider gerçek transaction desteklemez; yine de tek SaveChanges ile tutarlı yazarız.
+        // InMemory provider does not support real transactions; still one SaveChanges.
         if (!_db.Database.IsRelational())
         {
             var result = await operation(cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
+            await SaveChangesAsync(cancellationToken);
             return result;
         }
 
@@ -44,7 +53,7 @@ public class UnitOfWork : IUnitOfWork
         try
         {
             var result = await operation(cancellationToken);
-            await _db.SaveChangesAsync(cancellationToken);
+            await SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return result;
         }

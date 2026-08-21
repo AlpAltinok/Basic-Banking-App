@@ -22,5 +22,10 @@ public class WalletConfiguration : IEntityTypeConfiguration<Wallet>
         builder.Property(x => x.Currency)
             .IsRequired()
             .HasMaxLength(3);
+
+        // UPDATE ... WHERE Id = @id AND Version = @originalVersion
+        builder.Property(x => x.Version)
+            .IsConcurrencyToken()
+            .IsRequired();
     }
 }

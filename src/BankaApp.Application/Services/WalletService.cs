@@ -37,8 +37,9 @@ public class WalletService : IWalletService
 
         var wallet = await GetRequiredWalletAsync(userId, cancellationToken);
 
-        // Deposit: para sisteme girer → ToWallet dolar, FromWallet boş kalır.
+        // Deposit: money enters the system → ToWallet increases.
         wallet.Balance += request.Amount;
+        wallet.Version++;
         wallet.UpdatedAtUtc = DateTime.UtcNow;
 
         await _transactionRepository.AddAsync(new Transaction
@@ -71,8 +72,9 @@ public class WalletService : IWalletService
                 $"Yetersiz bakiye. Mevcut: {wallet.Balance} {wallet.Currency}");
         }
 
-        // Withdrawal: para sistemden çıkar → FromWallet azalır, ToWallet boş kalır.
+        // Withdrawal: money leaves the system → FromWallet decreases.
         wallet.Balance -= request.Amount;
+        wallet.Version++;
         wallet.UpdatedAtUtc = DateTime.UtcNow;
 
         await _transactionRepository.AddAsync(new Transaction

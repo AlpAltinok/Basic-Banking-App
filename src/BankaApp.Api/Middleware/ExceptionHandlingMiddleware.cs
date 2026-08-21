@@ -35,10 +35,11 @@ public class ExceptionHandlingMiddleware
     {
         var (statusCode, errorCode, message) = exception switch
         {
+            ConcurrencyException concurrency => (HttpStatusCode.Conflict, concurrency.ErrorCode, concurrency.Message),
             NotFoundException notFound => (HttpStatusCode.NotFound, notFound.ErrorCode, notFound.Message),
             BusinessException business => (HttpStatusCode.BadRequest, business.ErrorCode, business.Message),
             UnauthorizedAccessException unauthorized => (HttpStatusCode.Unauthorized, "UNAUTHORIZED", unauthorized.Message),
-            _ => (HttpStatusCode.InternalServerError, "INTERNAL_ERROR", "Beklenmeyen bir hata oluştu.")
+            _ => (HttpStatusCode.InternalServerError, "INTERNAL_ERROR", "An unexpected error occurred.")
         };
 
         if (statusCode == HttpStatusCode.InternalServerError)

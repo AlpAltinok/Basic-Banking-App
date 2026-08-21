@@ -41,6 +41,7 @@ BankaApp.sln
 - [x] Transfers with DB transactions + idempotency keys
 - [x] Unit tests (Auth, Wallet, Transfer)
 - [x] Integration tests (HTTP E2E: auth → deposit → transfer + idempotency)
+- [x] Optimistic concurrency on wallet balance updates
 - [x] EF Core migrations + persistent SQLite (SQL Server option)
 - [x] CI pipelines (GitHub Actions + Azure Pipelines)
 - [x] Docker image & compose
@@ -159,4 +160,5 @@ Content-Type: application/json
 - **Ledger rows** — every deposit, withdrawal, and transfer is recorded, not only balance updates
 - **Atomic transfers** — debit + credit + ledger write succeed or roll back together
 - **Idempotency** — optional client key prevents double-charging on retries
+- **Optimistic concurrency** — `Wallet.Version` blocks lost updates on concurrent withdrawals (HTTP 409)
 - **Passwords hashed** — BCrypt; plain text is never stored

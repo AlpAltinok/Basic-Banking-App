@@ -24,6 +24,12 @@ public class Wallet
 
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 
+    /// <summary>
+    /// Optimistic concurrency token. Incremented on every balance change.
+    /// Prevents lost updates when two withdrawals hit the same wallet.
+    /// </summary>
+    public int Version { get; set; }
+
     // Navigation
     public User? User { get; set; }
 

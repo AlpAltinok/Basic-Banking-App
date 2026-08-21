@@ -95,11 +95,13 @@ public class TransferService : ITransferService
                     $"Yetersiz bakiye. Mevcut: {fromWallet.Balance} {fromWallet.Currency}");
             }
 
-            // Atomik güncelleme: biri başarısız olursa transaction Rollback eder.
+            // Atomic update inside a DB transaction + optimistic concurrency on Version.
             fromWallet.Balance -= request.Amount;
+            fromWallet.Version++;
             fromWallet.UpdatedAtUtc = DateTime.UtcNow;
 
             toWallet.Balance += request.Amount;
+            toWallet.Version++;
             toWallet.UpdatedAtUtc = DateTime.UtcNow;
 
             var transaction = new Transaction
