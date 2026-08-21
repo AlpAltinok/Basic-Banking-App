@@ -1,0 +1,14 @@
+services:
+  api:
+    build: .
+    ports:
+      - "5088:5088"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      Database__Provider: Sqlite
+      ConnectionStrings__SqliteConnection: "Data Source=/data/BankaApp.db"
+    volumes:
+      - wallet-data:/data
+
+volumes:
+  wallet-data:

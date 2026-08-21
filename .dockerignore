@@ -1,0 +1,10 @@
+**/.git
+**/.vs
+**/bin
+**/obj
+**/.idea
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/TestResults
+README.md

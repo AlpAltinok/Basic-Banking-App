@@ -1,5 +1,5 @@
-# VeriPark ilanlarındaki Azure DevOps CI/CD ile aynı mantık.
-# Azure DevOps'ta: Pipelines → New pipeline → Existing Azure Pipelines YAML
+# Azure DevOps CI — restore, build, and test on every push/PR.
+# Pipelines → New pipeline → Existing Azure Pipelines YAML
 
 trigger:
   - master

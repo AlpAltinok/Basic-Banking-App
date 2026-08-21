@@ -11,9 +11,14 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// SQLite dosyası ContentRoot'ta olsun (çalışma dizinine göre kaybolmasın).
-var sqlitePath = Path.Combine(builder.Environment.ContentRootPath, "BankaApp.db");
-builder.Configuration["ConnectionStrings:SqliteConnection"] = $"Data Source={sqlitePath}";
+// Default SQLite file under ContentRoot; Docker can override via ConnectionStrings__SqliteConnection.
+var sqliteConnection = builder.Configuration.GetConnectionString("SqliteConnection");
+if (string.IsNullOrWhiteSpace(sqliteConnection)
+    || sqliteConnection.Equals("Data Source=BankaApp.db", StringComparison.OrdinalIgnoreCase))
+{
+    var sqlitePath = Path.Combine(builder.Environment.ContentRootPath, "BankaApp.db");
+    builder.Configuration["ConnectionStrings:SqliteConnection"] = $"Data Source={sqlitePath}";
+}
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -24,26 +29,25 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "BankaApp Digital Wallet API",
+        Title = "Digital Wallet API",
         Version = "v1",
         Description = """
-            Test sırası:
-            1) Auth → register veya login (kilit YOK)
-            2) accessToken kopyala
-            3) Sağ üst Authorize → kutuya şunu yapıştır: Bearer {token}
+            How to try it:
+            1) Auth → register or login (no lock icon)
+            2) Copy accessToken
+            3) Authorize → paste: Bearer {token}
             4) Authorize → Close
-            5) Wallet / Transfers endpoint'lerini çalıştır
+            5) Call Wallet / Transfers endpoints
             """
     });
 
-    // ApiKey tipi: Swagger "Bearer " eklemez. Kullanıcı tam satırı yapıştırır.
-    // Bu, Http+Bearer şemasındaki "çift Bearer / kilit açılmıyor" kafa karışıklığını önler.
+    // ApiKey scheme: paste the full "Bearer {token}" value (Swagger does not add the prefix).
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.ApiKey,
         In = ParameterLocation.Header,
-        Description = "Örnek: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        Description = "Example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
     });
 
     options.OperationFilter<BankaApp.Api.Swagger.AuthorizeCheckOperationFilter>();
