@@ -1,0 +1,32 @@
+# VeriPark ilanlarındaki Azure DevOps CI/CD ile aynı mantık.
+# Azure DevOps'ta: Pipelines → New pipeline → Existing Azure Pipelines YAML
+
+trigger:
+  - master
+  - main
+
+pr:
+  - master
+  - main
+
+pool:
+  vmImage: "ubuntu-latest"
+
+variables:
+  buildConfiguration: "Release"
+
+steps:
+  - task: UseDotNet@2
+    displayName: "Setup .NET 8"
+    inputs:
+      packageType: "sdk"
+      version: "8.0.x"
+
+  - script: dotnet restore BankaApp.sln
+    displayName: "Restore"
+
+  - script: dotnet build BankaApp.sln --configuration $(buildConfiguration) --no-restore
+    displayName: "Build"
+
+  - script: dotnet test BankaApp.sln --configuration $(buildConfiguration) --no-build --verbosity normal
+    displayName: "Test"

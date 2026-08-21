@@ -1,0 +1,66 @@
+@src/BankaApp.Api/BankaApp.Api.http
+
+@token = replace-with-jwt
+
+### Health
+GET {{BankaApp.Api_HostAddress}}/api/health
+Accept: application/json
+
+### Register
+POST {{BankaApp.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "eren@example.com",
+  "fullName": "Eren",
+  "password": "Sifre123!"
+}
+
+### Login
+POST {{BankaApp.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "eren@example.com",
+  "password": "Sifre123!"
+}
+
+### Wallet balance
+GET {{BankaApp.Api_HostAddress}}/api/wallet
+Authorization: Bearer {{token}}
+
+### Deposit
+POST {{BankaApp.Api_HostAddress}}/api/wallet/deposit
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "amount": 500,
+  "description": "Maaş yatırma"
+}
+
+### Withdraw
+POST {{BankaApp.Api_HostAddress}}/api/wallet/withdraw
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "amount": 100,
+  "description": "ATM çekimi"
+}
+
+### Transactions
+GET {{BankaApp.Api_HostAddress}}/api/wallet/transactions?take=10
+Authorization: Bearer {{token}}
+
+### Transfer
+POST {{BankaApp.Api_HostAddress}}/api/transfers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "toEmail": "veli@banka.app",
+  "amount": 150,
+  "description": "Borc odemesi",
+  "idempotencyKey": "demo-transfer-001"
+}
