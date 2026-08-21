@@ -1,0 +1,15 @@
+@namespace BankaApp.Web.Components
+
+<span class="brand-lockup @CssClass">
+    <span class="brand-glyph" aria-hidden="true">
+        <span class="brand-arrow"></span>
+    </span>
+    <span class="brand-text">
+        <span class="brand-name">GoldArrow</span>
+        <span class="brand-suffix">Bank</span>
+    </span>
+</span>
+
+@code {
+    [Parameter] public string CssClass { get; set; } = string.Empty;
+}

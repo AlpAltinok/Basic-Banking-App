@@ -1,0 +1,71 @@
+@page "/login"
+@layout EmptyLayout
+@inject WalletApi Api
+@inject AuthSession Session
+@inject NavigationManager Nav
+
+<PageTitle>Sign in · GoldArrow Bank</PageTitle>
+
+<section class="auth-hero">
+    <div class="auth-copy">
+        <BrandLockup CssClass="hero" />
+        <h1>Precision money movement.</h1>
+        <p class="lede">Wallet, ledger, and transfers — built with the same focus we bring to every GoldArrow product.</p>
+    </div>
+
+    <form class="auth-panel" @onsubmit="SubmitAsync" @onsubmit:preventDefault>
+        <h2>Sign in</h2>
+        <label>
+            Email
+            <input type="email" @bind="email" required autocomplete="username" />
+        </label>
+        <label>
+            Password
+            <input type="password" @bind="password" required autocomplete="current-password" />
+        </label>
+        @if (!string.IsNullOrWhiteSpace(error))
+        {
+            <p class="error" role="alert">@error</p>
+        }
+        <button class="btn primary" type="submit" disabled="@busy">@(busy ? "Signing in…" : "Sign in")</button>
+        <p class="muted">No account? <a href="register">Create one</a></p>
+    </form>
+</section>
+
+@code {
+    private string email = string.Empty;
+    private string password = string.Empty;
+    private string? error;
+    private bool busy;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        await Session.EnsureLoadedAsync();
+        if (Session.IsAuthenticated) Nav.NavigateTo("wallet", replace: true);
+    }
+
+    private async Task SubmitAsync()
+    {
+        busy = true;
+        error = null;
+        try
+        {
+            var auth = await Api.LoginAsync(email.Trim(), password);
+            await Session.SetAsync(auth);
+            Nav.NavigateTo("wallet");
+        }
+        catch (ApiException ex)
+        {
+            error = ex.Message;
+        }
+        catch (Exception)
+        {
+            error = "Cannot reach API. Is it running on http://localhost:5088?";
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

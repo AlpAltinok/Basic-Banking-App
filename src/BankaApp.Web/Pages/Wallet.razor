@@ -1,0 +1,161 @@
+@page "/wallet"
+@inject WalletApi Api
+@inject AuthSession Session
+@inject NavigationManager Nav
+
+<PageTitle>Wallet · GoldArrow Bank</PageTitle>
+
+<section class="wallet-hero">
+    <div>
+        <p class="eyebrow">GoldArrow vault</p>
+        <h1 class="balance">
+            @if (wallet is null)
+            {
+                <span class="muted">…</span>
+            }
+            else
+            {
+                <span>@wallet.Balance.ToString("N2")</span>
+                <small>@wallet.Currency</small>
+            }
+        </h1>
+        <p class="muted">Welcome, @(Session.FullName ?? "there"). Fund your vault, then fire a transfer.</p>
+    </div>
+</section>
+
+<section class="ops">
+    <form class="op-form" @onsubmit="DepositAsync" @onsubmit:preventDefault>
+        <h2>Deposit</h2>
+        <label>
+            Amount
+            <input type="number" step="0.01" min="0.01" @bind="depositAmount" required />
+        </label>
+        <button class="btn primary" type="submit" disabled="@busy">Deposit</button>
+    </form>
+
+    <form class="op-form" @onsubmit="WithdrawAsync" @onsubmit:preventDefault>
+        <h2>Withdraw</h2>
+        <label>
+            Amount
+            <input type="number" step="0.01" min="0.01" @bind="withdrawAmount" required />
+        </label>
+        <button class="btn secondary" type="submit" disabled="@busy">Withdraw</button>
+    </form>
+</section>
+
+@if (!string.IsNullOrWhiteSpace(message))
+{
+    <p class="@(isError ? "error" : "ok")" role="status">@message</p>
+}
+
+<section class="ledger">
+    <div class="ledger-head">
+        <h2>Recent activity</h2>
+        <button class="btn ghost" type="button" @onclick="LoadAsync" disabled="@busy">Refresh</button>
+    </div>
+    @if (transactions is null)
+    {
+        <p class="muted">Loading…</p>
+    }
+    else if (transactions.Count == 0)
+    {
+        <p class="muted">No movements yet.</p>
+    }
+    else
+    {
+        <ul class="ledger-list">
+            @foreach (var t in transactions)
+            {
+                <li>
+                    <div>
+                        <strong>@t.Type</strong>
+                        <span class="muted">@t.Description</span>
+                    </div>
+                    <div class="amount">
+                        @t.Amount.ToString("N2") @t.Currency
+                        <time>@t.CreatedAtUtc.ToLocalTime().ToString("g")</time>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+</section>
+
+@code {
+    private WalletResponse? wallet;
+    private List<TransactionResponse>? transactions;
+    private decimal depositAmount = 100;
+    private decimal withdrawAmount = 50;
+    private string? message;
+    private bool isError;
+    private bool busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Session.EnsureLoadedAsync();
+        if (!Session.IsAuthenticated)
+        {
+            Nav.NavigateTo("login");
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        busy = true;
+        message = null;
+        try
+        {
+            wallet = await Api.GetWalletAsync();
+            transactions = await Api.GetTransactionsAsync();
+        }
+        catch (ApiException ex)
+        {
+            isError = true;
+            message = ex.Message;
+        }
+        catch
+        {
+            isError = true;
+            message = "Cannot reach API. Start it on http://localhost:5088.";
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task DepositAsync()
+    {
+        await RunMoneyOp(() => Api.DepositAsync(depositAmount, "Web deposit"), "Deposit completed.");
+    }
+
+    private async Task WithdrawAsync()
+    {
+        await RunMoneyOp(() => Api.WithdrawAsync(withdrawAmount, "Web withdrawal"), "Withdrawal completed.");
+    }
+
+    private async Task RunMoneyOp(Func<Task<WalletResponse>> action, string ok)
+    {
+        busy = true;
+        message = null;
+        try
+        {
+            wallet = await action();
+            transactions = await Api.GetTransactionsAsync();
+            isError = false;
+            message = ok;
+        }
+        catch (ApiException ex)
+        {
+            isError = true;
+            message = ex.Message;
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

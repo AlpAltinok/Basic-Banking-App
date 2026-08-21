@@ -1,0 +1,85 @@
+@page "/transfer"
+@inject WalletApi Api
+@inject AuthSession Session
+@inject NavigationManager Nav
+
+<PageTitle>Transfer · GoldArrow Bank</PageTitle>
+
+<section class="page-intro">
+    <h1>Send with aim</h1>
+    <p class="lede">Transfer to another registered email. Add an idempotency key when you need a clean retry.</p>
+</section>
+
+<form class="transfer-form" @onsubmit="SubmitAsync" @onsubmit:preventDefault>
+    <label>
+        Recipient email
+        <input type="email" @bind="toEmail" required />
+    </label>
+    <label>
+        Amount
+        <input type="number" step="0.01" min="0.01" @bind="amount" required />
+    </label>
+    <label>
+        Description
+        <input @bind="description" maxlength="500" />
+    </label>
+    <label>
+        Idempotency key (optional)
+        <input @bind="idempotencyKey" maxlength="100" placeholder="unique-key-123" />
+    </label>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <p class="@(isError ? "error" : "ok")" role="status">@message</p>
+    }
+
+    <button class="btn primary" type="submit" disabled="@busy">@(busy ? "Sending…" : "Send transfer")</button>
+</form>
+
+@code {
+    private string toEmail = string.Empty;
+    private decimal amount = 25;
+    private string description = string.Empty;
+    private string idempotencyKey = string.Empty;
+    private string? message;
+    private bool isError;
+    private bool busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Session.EnsureLoadedAsync();
+        if (!Session.IsAuthenticated) Nav.NavigateTo("login");
+    }
+
+    private async Task SubmitAsync()
+    {
+        busy = true;
+        message = null;
+        try
+        {
+            var key = string.IsNullOrWhiteSpace(idempotencyKey) ? null : idempotencyKey.Trim();
+            var result = await Api.TransferAsync(
+                toEmail.Trim(),
+                amount,
+                string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+                key);
+
+            isError = false;
+            message = $"Sent {result.Amount:N2} {result.Currency} to {result.ToEmail}. Your balance is now {result.SenderBalanceAfter:N2}.";
+        }
+        catch (ApiException ex)
+        {
+            isError = true;
+            message = ex.Message;
+        }
+        catch
+        {
+            isError = true;
+            message = "Cannot reach API. Start it on http://localhost:5088.";
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+}

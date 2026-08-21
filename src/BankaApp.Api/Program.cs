@@ -75,6 +75,17 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Web", policy =>
+        policy.WithOrigins(
+                "http://localhost:5274",
+                "https://localhost:7261",
+                "http://127.0.0.1:5274")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
+
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -85,15 +96,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.DocumentTitle = "BankaApp API";
-        options.DefaultModelsExpandDepth(-1); // şema paneli kafa karıştırmasın
+        options.DefaultModelsExpandDepth(-1);
     });
 }
 
-// Development'ta http://localhost ile test ederken HTTPS yönlendirmesi takılmaya yol açabiliyor.
 if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
+app.UseCors("Web");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

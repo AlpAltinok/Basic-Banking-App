@@ -1,0 +1,21 @@
+@page "/"
+@layout EmptyLayout
+@inject NavigationManager Nav
+@inject AuthSession Session
+
+<div class="boot">
+    <div class="boot-brand">
+        <span class="brand-glyph" aria-hidden="true"><span class="brand-arrow"></span></span>
+        <span>Loading GoldArrow Bank…</span>
+    </div>
+</div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        await Session.EnsureLoadedAsync();
+        Nav.NavigateTo(Session.IsAuthenticated ? "wallet" : "login", replace: true);
+    }
+}

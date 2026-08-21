@@ -1,12 +1,15 @@
-# Basic Banking App — Digital Wallet & Transfer API
+# GoldArrow Bank — Digital Wallet & Transfer API
 
 A layered .NET 8 backend that models everyday fintech flows: authentication, wallet balances, ledger entries, and peer-to-peer transfers with transactional consistency.
+
+Product UI is branded **GoldArrow Bank**. The solution folders remain `BankaApp.*` for the codebase.
 
 Built as a portfolio project around common enterprise banking/fintech patterns — not tied to any specific employer.
 
 ## Stack
 
 - ASP.NET Core Web API (.NET 8)
+- Blazor WebAssembly UI (.NET 9)
 - Clean / layered architecture (Api · Application · Domain · Infrastructure)
 - EF Core (Code-First) with migrations
 - SQLite by default; SQL Server ready via config
@@ -22,7 +25,8 @@ BankaApp.sln
 │   ├── BankaApp.Api            → HTTP endpoints, middleware, Swagger
 │   ├── BankaApp.Application    → Use cases, DTOs, service interfaces
 │   ├── BankaApp.Domain         → Entities & enums (framework-free)
-│   └── BankaApp.Infrastructure → EF Core, repositories, JWT, BCrypt
+│   ├── BankaApp.Infrastructure → EF Core, repositories, JWT, BCrypt
+│   └── BankaApp.Web            → Blazor WASM client (login, wallet, transfer)
 └── tests/
     ├── BankaApp.UnitTests
     └── BankaApp.IntegrationTests
@@ -45,15 +49,27 @@ BankaApp.sln
 - [x] EF Core migrations + persistent SQLite (SQL Server option)
 - [x] CI pipelines (GitHub Actions + Azure Pipelines)
 - [x] Docker image & compose
+- [x] Blazor WebAssembly frontend (auth, wallet, transfer)
 
 ## Run locally
 
+**API**
+
 ```bash
-dotnet restore
 dotnet run --project src/BankaApp.Api --urls http://localhost:5088
 ```
 
 Swagger: [http://localhost:5088/swagger](http://localhost:5088/swagger)
+
+**Web UI** (second terminal)
+
+```bash
+dotnet run --project src/BankaApp.Web --urls http://localhost:5274
+```
+
+Open [http://localhost:5274](http://localhost:5274) — register/sign in, then deposit and transfer.
+
+API base URL for the client: `src/BankaApp.Web/wwwroot/appsettings.json` (`ApiBaseUrl`).
 
 ### Database
 

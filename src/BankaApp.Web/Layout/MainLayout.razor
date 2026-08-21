@@ -1,0 +1,58 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+
+<div class="shell">
+    <header class="topbar">
+        <a class="brand" href="wallet" aria-label="GoldArrow Bank home">
+            <BrandLockup CssClass="compact" />
+        </a>
+        <nav class="nav">
+            <NavLink href="wallet">Wallet</NavLink>
+            <NavLink href="transfer">Transfer</NavLink>
+        </nav>
+        <div class="topbar-actions">
+            @if (!string.IsNullOrWhiteSpace(Session.FullName))
+            {
+                <span class="user-chip">@Session.FullName</span>
+            }
+            <button class="btn ghost" @onclick="LogoutAsync">Sign out</button>
+        </div>
+    </header>
+    <main class="stage">
+        @Body
+    </main>
+</div>
+
+@code {
+    [Inject] private AuthSession Session { get; set; } = default!;
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+
+    private bool _redirecting;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        Session.Changed += OnSessionChanged;
+        await Session.EnsureLoadedAsync();
+
+        if (!Session.IsAuthenticated && !_redirecting)
+        {
+            _redirecting = true;
+            Nav.NavigateTo("login", replace: true);
+        }
+    }
+
+    private void OnSessionChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task LogoutAsync()
+    {
+        await Session.ClearAsync();
+        Nav.NavigateTo("login");
+    }
+
+    public void Dispose()
+    {
+        Session.Changed -= OnSessionChanged;
+    }
+}
